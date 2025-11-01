@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mastermind Bootcamp Portal</title>
+    <!-- 1. Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 2. Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* gray-900 */
+        }
+        .dark {
+            color-scheme: dark;
+        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1f2937; } /* gray-800 */
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; } /* gray-600 */
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; } /* gray-500 */
+    </style>
+</head>
+<body class="text-gray-200">
+
+    <!-- === HEADER === -->
+    <header class="bg-gray-900/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-700">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-20">
+            <!-- Logo -->
+            <div>
+                <h1 class="text-3xl font-extrabold text-white">
+                    MASTERMIND<span class="text-blue-500">BOOTCAMP</span>
+                </h1>
+                <p class="text-sm text-gray-400 -mt-1">THE DAILY SHOW: LIVE INTEL</p>
+            </div>
+            <!-- Auth Buttons -->
+            <div id="auth-container">
+                <button id="login-btn" class="text-sm font-medium bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all">
+                    Member Login
+                </button>
+                <button id="logout-btn" class="hidden text-sm font-medium bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-all">
+                    Logout
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- === MAIN CONTENT === -->
+    <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+
+        <!-- === LOGIN MODAL (Hidden by default) === -->
+        <div id="login-modal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+            <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-md border border-gray-700">
+                <h2 class="text-3xl font-bold text-white text-center mb-6">Member Login</h2>
+                <form id="login-form" class="space-y-6">
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-300">Email</label>
+                        <input type="email" id="login-email" required class="mt-1 block w-full bg-gray-900 border-gray-700 rounded-lg px-4 py-3 text-white focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-300">Password</label>
+                        <input type="password" id="login-password" required class="mt-1 block w-full bg-gray-900 border-gray-700 rounded-lg px-4 py-3 text-white focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold text-lg hover:bg-blue-700 transition-all">
+                        Secure Login
+                    </button>
+                    <button type="button" id="close-modal-btn" class="w-full text-gray-400 py-2 rounded-lg font-medium hover:bg-gray-700 transition-all">
+                        Cancel
+                    </button>
+                    <p id="login-error" class="text-red-400 text-sm text-center"></p>
+                </form>
+            </div>
+        </div>
+
+        <!-- === VIEW SWITCHER === -->
+        <div class="mb-6 bg-gray-800 p-2 rounded-lg inline-flex" id="view-switcher">
+             <button id="public-view-btn" class="px-6 py-2 rounded-md font-semibold bg-blue-600 text-white">Big Board</button>
+             <button id="private-view-btn" class="hidden px-6 py-2 rounded-md font-semibold text-gray-400 hover:bg-gray-700">My Dashboard</button>
+        </div>
+
+        <!-- === 1. PUBLIC VIEW: "THE BIG BOARD" === -->
+        <div id="public-view">
+            <h2 class="text-4xl font-extrabold text-white mb-6">Bootcamp Big Board</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left Column: Check-ins & Leaderboards -->
+                <div class="lg:col-span-2 space-y-6">
+                    
+                    <!-- *** NEW: Daily Map Roll Call *** -->
+                    <div class="bg-gray-800 rounded-2xl shadow-xl border border-gray-700 p-6">
+                        <h3 class="text-2xl font-bold text-white mb-4">Daily Map Roll Call (Today)</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <!-- Morning Map -->
+                            <div>
+                                <h4 class="font-semibold text-lg text-blue-300 mb-3">Morning Map</h4>
+                                <div id="morning-checkin-list" class="space-y-2">
+                                    <p class="text-gray-400 italic">Loading...</p>
+                                </div>
+                            </div>
+                            <!-- Midday Map -->
+                            <div>
+                                <h4 class="font-semibold text-lg text-green-300 mb-3">Midday Map</h4>
+                                <div id="midday-checkin-list" class="space-y-2">
+                                    <p class="text-gray-400 italic">Loading...</p>
+                                </div>
+                            </div>
+                            <!-- Evening Map -->
+                            <div>
+                                <h4 class="font-semibold text-lg text-indigo-300 mb-3">Evening Map</h4>
+                                <div id="evening-checkin-list" class="space-y-2">
+                                    <p class="text-gray-400 italic">Loading...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- *** NEW: Leaderboards *** -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Top Sleep Scores -->
+                        <div class="bg-gray-800 rounded-2xl shadow-xl border border-gray-700 p-6">
+                            <h3 class="text-2xl font-bold text-white mb-4">Top Sleep Scores</h3>
+                            <div id="sleep-board" class="space-y-3">
+                                <p class="text-gray-400 italic">Loading sleep data...</p>
+                            </div>
+                        </div>
+                        <!-- Steps Leaderboard -->
+                        <div class="bg-gray-800 rounded-2xl shadow-xl border border-gray-700 p-6">
+                            <h3 class="text-2xl font-bold text-white mb-4">Steps Leaders</h3>
+                            <div id="steps-board" class="space-y-3">
+                                <p class="text-gray-400 italic">Loading steps data...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Mindset Feed -->
+                <div class="lg:col-span-1 bg-gray-800 rounded-2xl shadow-xl border border-gray-700 p-6 h-full max-h-[800px] overflow-y-auto">
+                    <!-- *** NEW: Title Change *** -->
+                    <h3 class="text-2xl font-bold text-white mb-4 sticky top-0 bg-gray-800 py-2">Mindset Quotes of the Day</h3>
+                    <!-- *** NEW: ID Change *** -->
+                    <div id="mindset-feed" class="space-y-5">
+                        <p class="text-gray-400 italic">Loading mindset quotes...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- === 2. PRIVATE VIEW: "MY DASHBOARD" === -->
+        <div id="private-view" class="hidden">
+            <!-- ... (This part is unchanged) ... -->
+            <h2 class="text-4xl font-extrabold text-white mb-2">My Private Dashboard</h2>
+            <p class="text-lg text-gray-400 mb-6" id="welcome-user">Welcome, loading...</p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Vitals -->
+                <div class="bg-blue-800/20 border border-blue-600 rounded-2xl shadow-xl p-6">
+                    <h3 class="text-xl font-bold text-blue-300 mb-4">My Latest Vitals</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between text-lg">
+                            <span class="text-gray-400">Weight:</span>
+                            <span class="font-bold text-white" id="private-weight">-- lbs</span>
+                        </div>
+                        <div class="flex justify-between text-lg">
+                            <span class="text-gray-400">Sleep Hours:</span>
+                            <span class="font-bold text-white" id="private-sleep">-- hrs</span>
+                        </div>
+                        <div class="flex justify-between text-lg">
+                            <span class="text-gray-400">Sleep Quality:</span>
+                            <span class="font-bold text-white" id="private-sleep-quality">-- / 5</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- My Logs (2-col) -->
+                <div class="lg:col-span-2 bg-gray-800 rounded-2xl shadow-xl border border-gray-700 p-6">
+                    <h3 class="text-xl font-bold text-white mb-4">My Private Logs</h3>
+                    <div class="space-y-4">
+                        <!-- Morning -->
+                        <div>
+                            <p class="text-sm font-semibold text-gray-400">MORNING MINDSET:</p>
+                            <p class="text-lg text-white p-3 bg-gray-900 rounded-md" id="private-mindset">...</p>
+                        </div>
+                        <!-- Afternoon -->
+                        <div>
+                            <p class="text-sm font-semibold text-gray-400">FITNESS/MOVEMENT:</p>
+                            <p class="text-lg text-white p-3 bg-gray-900 rounded-md" id="private-fitness">...</p>
+                        </div>
+                        <!-- Evening -->
+                        <div>
+                            <p class="text-sm font-semibold text-gray-400">EVENING RECAP:</p>
+                            <p class="text-lg text-white p-3 bg-gray-900 rounded-md" id="private-recap">...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- === 4. FIREBASE SDKs === -->
+    <!-- ... (This part is unchanged) ... -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+
+    <!-- === 5. JAVASCRIPT APP LOGIC === -->
+    <script>
+        // --- START CONFIGURATION ---
+        //
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        // !!! YOUR KEYS ARE PLUGGED IN - WE ARE LIVE  !!!
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        //
+        const firebaseConfig = {
+          apiKey: "AIzaSyBoqMNKBa-YXhj-d6dAiSn3fFf5acdlFM4",
+          authDomain: "mastermind-bootcamp-fa3b9.firebaseapp.com",
+          projectId: "mastermind-bootcamp-fa3b9",
+          storageBucket: "mastermind-bootcamp-fa3b9.firebasestorage.app",
+          messagingSenderId: "996344534345",
+          appId: "1:996344534345:web:b79cff198649b4bad53698"
+        };
+        // --- END CONFIGURATION ---
+
+
+        // --- APPLICATION (Don't edit below this) ---
+        let app;
+        let auth;
+        let db;
+
+        // --- VIEWS & BUTTONS ---
+        const loginModal = document.getElementById('login-modal');
+        const loginBtn = document.getElementById('login-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const loginForm = document.getElementById('login-form');
+        const loginError = document.getElementById('login-error');
+
+        const publicView = document.getElementById('public-view');
+        const privateView = document.getElementById('private-view');
+        const publicViewBtn = document.getElementById('public-view-btn');
+        const privateViewBtn = document.getElementById('private-view-btn');
+        const welcomeUser = document.getElementById('welcome-user');
+        
+        // --- *** NEW: DATA CONTAINERS *** ---
+        const morningCheckinList = document.getElementById('morning-checkin-list');
+        const middayCheckinList = document.getElementById('midday-checkin-list');
+        const eveningCheckinList = document.getElementById('evening-checkin-list');
+        const sleepBoard = document.getElementById('sleep-board');
+        const stepsBoard = document.getElementById('steps-board');
+        const mindsetFeed = document.getElementById('mindset-feed');
+
+        /**
+         * 1. INITIALIZE THE APP
+         */
+        function initApp() {
+            try {
+                // Check if config is default (This will pass now)
+                if (firebaseConfig.apiKey.includes("PASTE_YOUR_KEY_HERE")) {
+                     throw new Error("You forgot to paste your `firebaseConfig` object from Phase 1.");
+                }
+                
+                app = firebase.initializeApp(firebaseConfig);
+                auth = firebase.auth();
+                db = firebase.firestore();
+
+                // Listen for auth changes (login/logout)
+                setupAuthListener();
+                
+                // Load the "Big Board" data
+                loadPublicLeaderboard();
+                
+                // Setup all event listeners
+                setupEventListeners();
+                
+            } catch (e) {
+                console.error("Firebase Init Error", e);
+                // *** NEW: Clearer Error Message ***
+                document.body.innerHTML = `<div class="h-screen flex items-center justify-center p-8">
+                    <div class="p-8 text-red-400 bg-gray-800 rounded-lg border border-red-600 shadow-2xl max-w-2xl">
+                        <h1 class="text-2xl font-bold text-white">App Init Error: Config Missing</h1>
+                        <p class="mt-2 text-lg">${e.message}</p>
+                        <p class="mt-4 text-gray-300">This means the app can't connect to your Firebase 'Brain'.</p>
+                        <p class="mt-2 text-gray-300">To fix this, you MUST:</p>
+                        <ol class="list-decimal list-inside text-gray-300 mt-2 space-y-1">
+                            <li>Open your Firebase Project.</li>
+                            <li>Go to Project Settings (click the ⚙️ icon).</li>
+                            <li>Find your 'Web app' and copy the \`firebaseConfig\` object.</li>
+                            <li>Open this \`Mastermind-Portal.html\` file in a text editor.</li>
+                            <li>Scroll to the \`<script>\` tag at the bottom (around line 385).</li>
+                            <li>Paste your keys over the placeholder \`firebaseConfig\` object.</li>
+                        </ol>
+                    </div>
+                </div>`;
+            }
+        }
+
+        /**
+         * 2. SETUP EVENT LISTENERS
+         */
+        function setupEventListeners() {
+            loginBtn.onclick = () => loginModal.classList.remove('hidden');
+            closeModalBtn.onclick = () => loginModal.classList.add('hidden');
+            logoutBtn.onclick = () => auth.signOut();
+
+            loginForm.onsubmit = async (e) => {
+                e.preventDefault();
+                loginError.textContent = '';
+                const email = document.getElementById('login-email').value;
+                const pass = document.getElementById('login-password').value;
+                try {
+                    await auth.signInWithEmailAndPassword(email, pass);
+                    // Auth listener will handle the rest
+                    loginModal.classList.add('hidden');
+                    loginForm.reset();
+                } catch (err) {
+                    console.error("Login Error", err);
+                    loginError.textContent = err.message;
+                }
+            };
+            
+            // View Switcher
+            publicViewBtn.onclick = () => showView('public');
+            privateViewBtn.onclick = () => showView('private');
+        }
+
+        /**
+         * 3. AUTH STATE LISTENER (The "Magic")
+         */
+        function setupAuthListener() {
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    // --- USER IS LOGGED IN ---
+                    loginBtn.classList.add('hidden');
+                    logoutBtn.classList.remove('hidden');
+                    privateViewBtn.classList.remove('hidden');
+                    
+                    welcomeUser.textContent = `Welcome, ${user.email.split('@')[0]}`;
+                    
+                    // A "safe" ID. We base64-encode the email just like the Apps Script.
+                    // This is the *key* to linking the data.
+                    const safeUserId = btoa(user.email);
+                    
+                    // Load their private stuff
+                    loadPrivateDashboard(safeUserId);
+                    
+                    // Switch to their private view
+                    showView('private');
+                    
+                } else {
+                    // --- USER IS LOGGED OUT ---
+                    loginBtn.classList.remove('hidden');
+                    logoutBtn.classList.add('hidden');
+                    privateViewBtn.classList.add('hidden');
+                    
+                    welcomeUser.textContent = `Welcome, guest.`;
+                    
+                    // Switch to public view
+                    showView('public');
+                }
+            });
+        }
+        
+        /**
+         * 4. SWITCH VIEWS
+         */
+        function showView(view) {
+            if (view === 'public') {
+                publicView.classList.remove('hidden');
+                privateView.classList.add('hidden');
+                publicViewBtn.classList.add('bg-blue-600', 'text-white');
+                publicViewBtn.classList.remove('text-gray-400', 'hover:bg-gray-700');
+                privateViewBtn.classList.remove('bg-blue-600', 'text-white');
+                privateViewBtn.classList.add('text-gray-400', 'hover:bg-gray-700');
+            } else {
+                publicView.classList.add('hidden');
+                privateView.classList.remove('hidden');
+                publicViewBtn.classList.remove('bg-blue-600', 'text-white');
+                publicViewBtn.classList.add('text-gray-400', 'hover:bg-gray-700');
+                privateViewBtn.classList.add('bg-blue-600', 'text-white');
+                privateViewBtn.classList.remove('text-gray-400', 'hover:bg-gray-700');
+            }
+        }
+
+        /**
+         * 5. *** NEW: LOAD "BIG BOARD" (PUBLIC DATA) ***
+         * This is what you'll show on "The Daily Show"
+         */
+        async function loadPublicLeaderboard() {
+            // Set loading states
+            morningCheckinList.innerHTML = '<p class="text-gray-400 italic">Loading...</p>';
+            middayCheckinList.innerHTML = '<p class="text-gray-400 italic">Loading...</p>';
+            eveningCheckinList.innerHTML = '<p class="text-gray-400 italic">Loading...</p>';
+            sleepBoard.innerHTML = '<p class="text-gray-400 italic">Loading...</p>';
+            stepsBoard.innerHTML = '<p class="text-gray-400 italic">Loading...</p>';
+            mindsetFeed.innerHTML = '<p class="text-gray-400 italic">Loading...</p>';
+
+            // We use onSnapshot() so it's REAL-TIME!
+            db.collection('public_data').onSnapshot(snapshot => {
+                if (snapshot.empty) {
+                    morningCheckinList.innerHTML = '<p class="text-gray-400 italic">No data yet. Did the Apps Script run?</p>';
+                    return;
+                }
+
+                let members = [];
+                snapshot.forEach(doc => {
+                    members.push({ id: doc.id, ...doc.data() });
+                });
+
+                // Clear old data
+                morningCheckinList.innerHTML = '';
+                middayCheckinList.innerHTML = '';
+                eveningCheckinList.innerHTML = '';
+                sleepBoard.innerHTML = '';
+                stepsBoard.innerHTML = '';
+                mindsetFeed.innerHTML = '';
+                
+                const today = new Date().toISOString().split('T')[0];
+
+                // Sort members by name for the roll call
+                members.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+
+                // --- Render the 3 Roll Call Lists ---
+                let morningCount = 0;
+                let middayCount = 0;
+                let eveningCount = 0;
+
+                members.forEach(m => {
+                    const name = m.name || atob(m.id).split('@')[0];
+                    const checkInHtml = (name) => `<div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                        <span class="text-white truncate" title="${name}">${name}</span>
+                    </div>`;
+                    
+                    const isToday = (timestamp) => timestamp && new Date(timestamp).toISOString().split('T')[0] === today;
+
+                    if (isToday(m.lastMorning) && m.streakMorning) {
+                        morningCheckinList.innerHTML += checkInHtml(name);
+                        morningCount++;
+                    }
+                    if (isToday(m.lastAfternoon) && m.streakAfternoon) {
+                        middayCheckinList.innerHTML += checkInHtml(name);
+                        middayCount++;
+                    }
+                    if (isToday(m.lastEvening) && m.streakEvening) {
+                        eveningCheckinList.innerHTML += checkInHtml(name);
+                        eveningCount++;
+                    }
+                });
+
+                if (morningCount === 0) morningCheckinList.innerHTML = '<p class="text-gray-500 italic">No check-ins yet.</p>';
+                if (middayCount === 0) middayCheckinList.innerHTML = '<p class="text-gray-500 italic">No check-ins yet.</p>';
+                if (eveningCount === 0) eveningCheckinList.innerHTML = '<p class="text-gray-500 italic">No check-ins yet.</p>';
+
+
+                // --- Render Top Sleep Scores ---
+                // *** This assumes data.sleepQuality exists from the "Evening Map" ***
+                const sortedBySleep = members
+                    .filter(m => m.sleepQuality > 0 && isToday(m.lastEvening))
+                    .sort((a, b) => b.sleepQuality - a.sleepQuality);
+                    
+                if(sortedBySleep.length === 0) sleepBoard.innerHTML = '<p class="text-gray-400 italic">No sleep scores reported yet.</p>';
+                sortedBySleep.forEach((m, index) => {
+                    const name = m.name || atob(m.id).split('@')[0];
+                    sleepBoard.innerHTML += `
+                        <div class="flex items-center justify-between p-3 bg-gray-900 rounded-lg">
+                            <span class="font-semibold text-white">${index + 1}. ${name}</span>
+                            <span class="font-bold text-blue-400">${m.sleepQuality} / 5</span>
+                        </div>
+                    `;
+                });
+
+                // --- Render Steps Leaderboard ---
+                // *** This assumes you added a "Steps Today?" question to your form ***
+                const sortedBySteps = members
+                    .filter(m => m.steps > 0 && isToday(m.lastAfternoon))
+                    .sort((a, b) => b.steps - a.steps);
+                    
+                if(sortedBySteps.length === 0) stepsBoard.innerHTML = '<p class="text-gray-400 italic">No steps data reported yet.</p>';
+                sortedBySteps.forEach((m, index) => {
+                    const name = m.name || atob(m.id).split('@')[0];
+                    stepsBoard.innerHTML += `
+                        <div class="flex items-center justify-between p-3 bg-gray-900 rounded-lg">
+                            <span class="font-semibold text-white">${index + 1}. ${name}</span>
+                            <span class="font-bold text-blue-400">${Number(m.steps).toLocaleString()} steps</span>
+                        </div>
+                    `;
+                });
+                
+                // --- Render Mindset Quotes Feed ---
+                // *** This uses the `publicMindset` field we just added to the Apps Script ***
+                const sortedByMindset = members
+                    .filter(m => m.publicMindset && isToday(m.lastMorning))
+                    .sort((a, b) => new Date(b.lastMorning) - new Date(a.lastMorning));
+
+                if(sortedByMindset.length === 0) mindsetFeed.innerHTML = '<p class="text-gray-400 italic">No mindset quotes posted yet.</p>';
+                sortedByMindset.forEach(m => {
+                    const name = m.name || atob(m.id).split('@')[0];
+                    mindsetFeed.innerHTML += `
+                        <div class="p-4 bg-gray-900 rounded-lg border border-gray-700">
+                            <p class="text-white mb-2 italic">"${m.publicMindset}"</p>
+                            <p class="text-right font-semibold text-blue-400">- ${name}</p>
+                        </div>
+                    `;
+                });
+            }, err => {
+                console.error("Error loading public data: ", err);
+                // ... (add error messages to all new boards)
+                morningCheckinList.innerHTML = `<p class="text-red-400 italic">Error: ${err.message}</p>`;
+                sleepBoard.innerHTML = `<p class="text-red-400 italic">Error: ${err.message}</p>`;
+                mindsetFeed.innerHTML = `<p class="text-red-400 italic">Error: ${err.message}</p>`;
+            });
+        }
+
+        /**
+         * 6. LOAD "MY DASHBOARD" (PRIVATE DATA)
+         */
+        async function loadPrivateDashboard(userId) {
+            // This reads *one single doc* from 'private_data'
+            // Thanks to our rules, this ONLY works if the user is
+            // logged in and `userId` matches their *own* ID.
+            
+            // We use onSnapshot() so it's REAL-TIME!
+            db.collection('private_data').doc(userId).onSnapshot(doc => {
+                if (!doc.exists) {
+                    console.warn("No private data doc found for this user.");
+                    return;
+                }
+
+                const data = doc.data();
+                
+                // Fill in the private dashboard
+                document.getElementById('private-weight').textContent = data.weight ? `${data.weight} lbs` : '-- lbs';
+                document.getElementById('private-sleep').textContent = data.sleepHours ? `${data.sleepHours} hrs` : '-- hrs';
+                document.getElementById('private-sleep-quality').textContent = data.sleepQuality ? `${data.sleepQuality} / 5` : '-- / 5';
+                
+                document.getElementById('private-mindset').textContent = data.morningMindset || 'No log yet...';
+                document.getElementById('private-fitness').textContent = data.fitness || 'No log yet...';
+                document.getElementById('private-recap').textContent = data.eveningRecap || 'No log yet...';
+                
+            }, err => {
+                console.error("Error loading private data: ", err);
+                document.getElementById('private-mindset').textContent = "Error loading private data.";
+            });
+        }
+
+        // --- GO! ---
+        document.addEventListener('DOMContentLoaded', initApp);
+
+    </script>
+</body>
+</html>
+
